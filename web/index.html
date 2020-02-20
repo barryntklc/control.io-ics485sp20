@@ -22,8 +22,9 @@
             renderer.setSize( window.innerWidth, window.innerHeight );
             document.body.appendChild( renderer.domElement );
 
-            var totalspeed = .03;
+            var totalspeed = .01; //chage the value and the ball moves from one point to another differently.
 
+            //should be able to add another ball here
             var player1geo = new THREE.CircleGeometry(.08,32);
             var player1material = new THREE.MeshBasicMaterial({
                 color: 0x4d88d5
@@ -35,11 +36,18 @@
                 color: 0xff3d0d
             });
             var player2 = new THREE.Mesh(player1geo, player2material);
-
+            
+            var player3geo = new THREE.CircleGeometry(.08,32);
+            var player3material = new THREE.MeshBasicMaterial({
+                color: 0xffffff
+            });
+            var player3 = new THREE.Mesh(player1geo, player3material);
+                                                     
             scene.add(player1);
             scene.add(player2);
+            scene.add(player3);
 
-            camera.position.z = 5;
+            camera.position.z = 2; //can adjust the distance between camera and dots
 
             function animate() {
                 requestAnimationFrame( animate );
@@ -98,6 +106,24 @@
                     default:
                         break;
                 }
+                
+                switch(e.code) {
+                    case "KeyJ":
+                        window.player3.translateY(-totalspeed);
+                        break;
+                    case "KeyU":
+                        window.player3.translateY(totalspeed);
+                        break;
+                    case "KeyH":
+                        window.player3.translateX(-totalspeed);
+                        break;
+                    case "KeyK":
+                        window.player3.translateX(totalspeed);
+                        break;
+                    default:
+                        break;
+                }
+                                                    
             }
             
 		</script>
