@@ -15,6 +15,17 @@
             //Literally based off of tutorial:
             //https://threejs.org/docs/index.html#manual/en/introduction/Creating-a-scene
 
+            var max_x = window.innerWidth;
+            var min_x = -max_x;
+            var max_y = window.innerHeight;
+            var min_y = -max_y;
+
+            var player_max_velocity = .05;
+            var players = [];
+            var player_radius = .07;
+
+            var canvas_multiplier = 335;
+
             /** 
              * Player
              * Class that represents a Player
@@ -22,31 +33,59 @@
             class Player {
                 constructor(color, name, keybinds) {
                     this.keybinds = keybinds;
-                    this.geometry = new THREE.CircleGeometry(.08,32);
+                    this.geometry = new THREE.CircleGeometry(player_radius, 32);
                     this.material = new THREE.MeshBasicMaterial({
                         color: color
                     });
                     this.player_object = new THREE.Mesh(this.geometry, this.material);
+                    this.randomSpawn();                    
                 };
+
+                randomSpawn() {
+                    var random_x = Math.floor(((Math.random() * Math.floor(max_x * 2)) - max_x))/canvas_multiplier;
+                    var random_y = Math.floor(((Math.random() * Math.floor(max_y * 2)) - max_y))/canvas_multiplier;
+                    this.player_object.position.x = random_x;
+                    this.player_object.position.y = random_y;
+                }
 
                 getPlayerObject () {
                     return this.player_object;
                 };
 
                 moveUp () {
-                    this.player_object.position.y += window.player_max_velocity;
+                    var player_y = this.player_object.position.y += player_max_velocity;
+                    if (player_y <= max_y/canvas_multiplier) {
+                        this.player_object.position.y = player_y;
+                    } else {
+                        this.player_object.position.y = max_y/canvas_multiplier;
+                    }
                 }
 
                 moveDown () {
-                    this.player_object.position.y -= window.player_max_velocity;
+                    var player_y = this.player_object.position.y -= player_max_velocity;
+                    if (player_y >= min_y/canvas_multiplier) {
+                        this.player_object.position.y = player_y;
+                    } else {
+                        this.player_object.position.y = min_y/canvas_multiplier;
+                    }
                 }
 
                 moveLeft () {
-                    this.player_object.position.x -= window.player_max_velocity;
+                    var player_x = this.player_object.position.x -= player_max_velocity;
+                    if (player_x >= min_x/canvas_multiplier) {
+                        this.player_object.position.x = player_x;
+                    } else {
+                        this.player_object.position.x = min_x/canvas_multiplier;
+                    }
                 }
 
                 moveRight () {
-                    this.player_object.position.x += window.player_max_velocity;
+                    var player_x = this.player_object.position.x += player_max_velocity;
+                    if (player_x <= max_x/canvas_multiplier) {
+                        this.player_object.position.x = player_x;
+                    } else {
+                        this.player_object.position.x = max_x/canvas_multiplier;
+                    }
                 }
 
                 updatePos () {
@@ -103,20 +142,18 @@
                 }
             };
 
-            var player_max_velocity = .05;
-            var players = [];
-
             var zoom_percent = 100;
             var scene = new THREE.Scene();
-            var camera = new THREE.PerspectiveCamera( zoom_percent, window.innerWidth / window.innerHeight, 0.1, 1000 );
+            var camera = new THREE.PerspectiveCamera( zoom_percent, max_x / max_y, 1, 1000 );
+            // var camera = new THREE.PerspectiveCamera( zoom_percent, max_x*2 / max_y, 1, 1000 );
             camera.position.z = 5;
 
             var renderer = new THREE.WebGLRenderer();
-            renderer.setSize( window.innerWidth, window.innerHeight );
+            renderer.setSize( max_x, max_y );
             document.body.appendChild( renderer.domElement );
 
             window.addEventListener('gamepadconnected', controllerConnectedEvent);
-            window.addEventListener('resize', windowResizeEvent);
+            // window.addEventListener('resize', windowResizeEvent);
             window.addEventListener('keydown', keyDownEvent);
             window.addEventListener('keyup', keyUpEvent);
 
@@ -134,9 +171,9 @@
             };
 
             //probably should set the size proportionally
-            function windowResizeEvent() {
-                renderer.setSize( window.innerWidth, window.innerHeight );
-            }
+            // function windowResizeEvent() {
+            //     renderer.setSize( max_x, max_y );
+            // }
 
             function keyDownEvent(event) {
                 players.forEach(function (player) {
