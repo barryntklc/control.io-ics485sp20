@@ -102,7 +102,7 @@
                  * Given a float modifier value, updates the player's position on the X axis for a frame.
                  */
                 moveX (modifier) {
-                    var player_x = this.player_object.position.x += (player_max_velocity * modifier);
+                    var player_x = this.player_object.position.x + (player_max_velocity * modifier);
                     this.player_object.position.x = player_x;
                     
                     //TODO Constrain x axes movement to area
@@ -120,7 +120,7 @@
                  * Given a float modifier value, updates the player's position on the Y axis for a frame.
                  */
                 moveY (modifier) {
-                    var player_y = this.player_object.position.y += (player_max_velocity * modifier);
+                    var player_y = this.player_object.position.y + (player_max_velocity * modifier);
                     this.player_object.position.y = player_y;
                     
                     //TODO Constrain y axes movement to area
@@ -194,9 +194,10 @@
             renderer.setSize( max_x, max_y );
             document.body.appendChild( renderer.domElement );
 
+            //detect gamepad connection
             window.addEventListener('gamepadconnected', controllerConnectedEvent);
-            // window.addEventListener('resize', windowResizeEvent);
-            // removed the resize event since it would bug out the view of the play area
+
+            //detect keyboard control input
             window.addEventListener('keydown', keyDownEvent);
             window.addEventListener('keyup', keyUpEvent);
 
@@ -212,8 +213,9 @@
                 //imagine spawning a player when they connect a gamepad though. Could make for a cool feature.
             };
 
-            //probably should set the size proportionally
+            // window.addEventListener('resize', windowResizeEvent);
             // removed the resize event since it would bug out the view of the play area
+            //probably should set the size proportionally
             // function windowResizeEvent() {
             //     renderer.setSize( max_x, max_y );
             // }
@@ -252,6 +254,7 @@
 
             //TODO assign a gamepad to a Player
             function gamepad_detect() {
+                //TODO for each person, get the assigned gamepad
                 if (navigator.getGamepads) {
                     var gp = navigator.getGamepads()[0];
 
@@ -310,7 +313,6 @@
                     //TODO move to Player class
                     var currLJ_X = refineAxisValue(gp.axes[0]);
                     var currLJ_Y = refineAxisValue(gp.axes[1]);
-
                     if (!(players[0].prevLJ_X == currLJ_X)) {
                         players[0].prevLJ_X = currLJ_X;
                     }
