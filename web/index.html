@@ -27,6 +27,8 @@
             //used to set the bounds of the canvas.? 
             var canvas_multiplier = 335;
 
+            var debug = false;
+
             /** 
              * Player
              * 
@@ -34,6 +36,8 @@
              */
             class Player {
                 constructor(color, name, keybinds) {
+                    this.name = name;
+
                     this.prevLJ_X = 0;
                     this.prevLJ_Y = 0;
                     this.prevRJ_X = 0;
@@ -132,17 +136,40 @@
                 }
 
                 updatePos () {
-                    if (this.UpPressed) {
-                        this.moveUp();
-                    }
-                    if (this.DownPressed) {
-                        this.moveDown();
-                    }
-                    if (this.LeftPressed) {
-                        this.moveLeft();
-                    }
-                    if (this.RightPressed) {
-                        this.moveRight();
+                    if (this.gamepad == undefined) {
+                        if (this.UpPressed) {
+                            this.moveUp();
+                        }
+                        if (this.DownPressed) {
+                            this.moveDown();
+                        }
+                        if (this.LeftPressed) {
+                            this.moveLeft();
+                        }
+                        if (this.RightPressed) {
+                            this.moveRight();
+                        }
+                    } else {
+                        this.currLJ_X = refineAxisValue(this.gamepad.axes[0]);
+                        this.currLJ_Y = refineAxisValue(this.gamepad.axes[1]);
+                        if (!(this.prevLJ_X == this.currLJ_X)) {
+                            this.prevLJ_X = this.currLJ_X;
+                        }
+                        if (!(this.prevLJ_Y == this.currLJ_Y)) {
+                            this.prevLJ_Y = this.currLJ_Y;
+                        }
+
+                        this.currRJ_X = refineAxisValue(this.gamepad.axes[2]);
+                        this.currRJ_Y = refineAxisValue(this.gamepad.axes[3]);
+                        if (!(this.prevRJ_X == this.currRJ_X)) {
+                            this.prevRJ_X = this.currRJ_X;
+                        }
+                        if (!(this.prevRJ_Y == this.currRJ_Y)) {
+                            this.prevRJ_Y = this.currRJ_Y;
+                        }
+
+                        this.moveY(-this.currLJ_Y);
+                        this.moveX(this.currLJ_X);
                     }
                 }
 
@@ -185,6 +212,10 @@
                 }
             };
 
+            class Gamepad {
+
+            }
+
             var zoom_percent = 100;
             var scene = new THREE.Scene();
             var camera = new THREE.PerspectiveCamera( zoom_percent, max_x / max_y, 1, 1000 );
@@ -196,6 +227,7 @@
 
             //detect gamepad connection
             window.addEventListener('gamepadconnected', controllerConnectedEvent);
+            window.addEventListener('gamepaddisconnected', controllerDisconnectedEvent);
 
             //detect keyboard control input
             window.addEventListener('keydown', keyDownEvent);
@@ -207,11 +239,35 @@
              * Detects when a gamepad is connected and announces it.
              */
             function controllerConnectedEvent(event) {
-                console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
-                event.gamepad.index, event.gamepad.id,
-                event.gamepad.buttons.length, event.gamepad.axes.length);
+                // console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+                // event.gamepad.index, event.gamepad.id,
+                // event.gamepad.buttons.length, event.gamepad.axes.length);
                 //imagine spawning a player when they connect a gamepad though. Could make for a cool feature.
+
+                var i = 0;
+                while(i < players.length) {
+                    if (players[i].gamepad == undefined) {
+                        players[i].gamepad = event.gamepad;
+                        console.log("Gamepad connected and assigned to %s with index %d: %s. %d buttons, %d axes.",
+                            players[i].name, event.gamepad.index, event.gamepad.id, event.gamepad.buttons.length, event.gamepad.axes.length);
+                        break;
+                    }
+                    i++;
+                }
             };
+
+            function controllerDisconnectedEvent(event) {
+                var i = 0;
+                while(i < players.length) {
+                    if (players[i].gamepad == event.gamepad) {
+                        players[i].gamepad = undefined;
+                        console.log("Gamepad disconnected from %s with index %d: %s. %d buttons, %d axes.",
+                            players[i].name, event.gamepad.index, event.gamepad.id, event.gamepad.buttons.length, event.gamepad.axes.length);
+                        break;
+                    }
+                    i++;
+                }
+            }
 
             // window.addEventListener('resize', windowResizeEvent);
             // removed the resize event since it would bug out the view of the play area
@@ -247,7 +303,7 @@
                 requestAnimationFrame(animate);
 
                 updatePos();
-                gamepad_detect();
+                // gamepad_detect();
 
                 renderer.render(scene, camera);
             }
@@ -258,79 +314,83 @@
                 if (navigator.getGamepads) {
                     var gp = navigator.getGamepads()[0];
 
-                    if (gp.buttons[0].value > 0 || gp.buttons[0].pressed == true) {
-                        console.log("AButton pressed.");
-                    }
-                    if (gp.buttons[1].value > 0 || gp.buttons[1].pressed == true) {
-                        console.log("BButton pressed.");
-                    }
-                    if (gp.buttons[2].value > 0 || gp.buttons[2].pressed == true) {
-                        console.log("XButton pressed.");
-                    }
-                    if (gp.buttons[3].value > 0 || gp.buttons[3].pressed == true) {
-                        console.log("YButton pressed.");
-                    }
-                    if (gp.buttons[4].value > 0 || gp.buttons[4].pressed == true) {
-                        console.log("LButton pressed.");
-                    }
-                    if (gp.buttons[5].value > 0 || gp.buttons[5].pressed == true) {
-                        console.log("RButton pressed.");
-                    }
-                    if (gp.buttons[6].value > 0 || gp.buttons[6].pressed == true) {
-                        console.log("LTrigger pressed.");
-                    }
-                    if (gp.buttons[7].value > 0 || gp.buttons[7].pressed == true) {
-                        console.log("RTrigger pressed.");
-                    }
-                    if (gp.buttons[8].value > 0 || gp.buttons[8].pressed == true) {
-                        console.log("BackButton pressed.");
-                    }
-                    if (gp.buttons[9].value > 0 || gp.buttons[9].pressed == true) {
-                        console.log("StartButton pressed.");
-                    }
-                    if (gp.buttons[10].value > 0 || gp.buttons[10].pressed == true) {
-                        console.log("LeftJoystickButton pressed.");
-                    }
-                    if (gp.buttons[11].value > 0 || gp.buttons[11].pressed == true) {
-                        console.log("RightJoystickButton pressed.");
-                    }
-                    if (gp.buttons[12].value > 0 || gp.buttons[12].pressed == true) {
-                        console.log("Up pressed.");
-                    }
-                    if (gp.buttons[13].value > 0 || gp.buttons[13].pressed == true) {
-                        console.log("Down pressed.");
-                    }
-                    if (gp.buttons[14].value > 0 || gp.buttons[14].pressed == true) {
-                        console.log("Left pressed.");
-                    }
-                    if (gp.buttons[15].value > 0 || gp.buttons[15].pressed == true) {
-                        console.log("Right pressed.");
-                    }
-                    if (gp.buttons[16].value > 0 || gp.buttons[16].pressed == true) {
-                        console.log("5 pressed.");
-                    }
+                    if (gp != undefined) {
+                        if (debug) {
+                            if (gp.buttons[0].value > 0 || gp.buttons[0].pressed == true) {
+                                console.log("AButton pressed.");
+                            }
+                            if (gp.buttons[1].value > 0 || gp.buttons[1].pressed == true) {
+                                console.log("BButton pressed.");
+                            }
+                            if (gp.buttons[2].value > 0 || gp.buttons[2].pressed == true) {
+                                console.log("XButton pressed.");
+                            }
+                            if (gp.buttons[3].value > 0 || gp.buttons[3].pressed == true) {
+                                console.log("YButton pressed.");
+                            }
+                            if (gp.buttons[4].value > 0 || gp.buttons[4].pressed == true) {
+                                console.log("LButton pressed.");
+                            }
+                            if (gp.buttons[5].value > 0 || gp.buttons[5].pressed == true) {
+                                console.log("RButton pressed.");
+                            }
+                            if (gp.buttons[6].value > 0 || gp.buttons[6].pressed == true) {
+                                console.log("LTrigger pressed.");
+                            }
+                            if (gp.buttons[7].value > 0 || gp.buttons[7].pressed == true) {
+                                console.log("RTrigger pressed.");
+                            }
+                            if (gp.buttons[8].value > 0 || gp.buttons[8].pressed == true) {
+                                console.log("BackButton pressed.");
+                            }
+                            if (gp.buttons[9].value > 0 || gp.buttons[9].pressed == true) {
+                                console.log("StartButton pressed.");
+                            }
+                            if (gp.buttons[10].value > 0 || gp.buttons[10].pressed == true) {
+                                console.log("LeftJoystickButton pressed.");
+                            }
+                            if (gp.buttons[11].value > 0 || gp.buttons[11].pressed == true) {
+                                console.log("RightJoystickButton pressed.");
+                            }
+                            if (gp.buttons[12].value > 0 || gp.buttons[12].pressed == true) {
+                                console.log("Up pressed.");
+                            }
+                            if (gp.buttons[13].value > 0 || gp.buttons[13].pressed == true) {
+                                console.log("Down pressed.");
+                            }
+                            if (gp.buttons[14].value > 0 || gp.buttons[14].pressed == true) {
+                                console.log("Left pressed.");
+                            }
+                            if (gp.buttons[15].value > 0 || gp.buttons[15].pressed == true) {
+                                console.log("Right pressed.");
+                            }
+                            if (gp.buttons[16].value > 0 || gp.buttons[16].pressed == true) {
+                                console.log("5 pressed.");
+                            }
+                        }
 
-                    //TODO move to Player class
-                    var currLJ_X = refineAxisValue(gp.axes[0]);
-                    var currLJ_Y = refineAxisValue(gp.axes[1]);
-                    if (!(players[0].prevLJ_X == currLJ_X)) {
-                        players[0].prevLJ_X = currLJ_X;
-                    }
-                    if (!(players[0].prevLJ_Y == currLJ_Y)) {
-                        players[0].prevLJ_Y = currLJ_Y;
-                    }
+                        //TODO move to Player class
+                        var currLJ_X = refineAxisValue(gp.axes[0]);
+                        var currLJ_Y = refineAxisValue(gp.axes[1]);
+                        if (!(players[0].prevLJ_X == currLJ_X)) {
+                            players[0].prevLJ_X = currLJ_X;
+                        }
+                        if (!(players[0].prevLJ_Y == currLJ_Y)) {
+                            players[0].prevLJ_Y = currLJ_Y;
+                        }
 
-                    var currRJ_X = refineAxisValue(gp.axes[2]);
-                    var currRJ_Y = refineAxisValue(gp.axes[3]);
-                    if (!(players[0].prevRJ_X == currRJ_X)) {
-                        players[0].prevRJ_X = currRJ_X;
-                    }
-                    if (!(players[0].prevRJ_Y == currRJ_Y)) {
-                        players[0].prevRJ_Y = currRJ_Y;
-                    }
+                        var currRJ_X = refineAxisValue(gp.axes[2]);
+                        var currRJ_Y = refineAxisValue(gp.axes[3]);
+                        if (!(players[0].prevRJ_X == currRJ_X)) {
+                            players[0].prevRJ_X = currRJ_X;
+                        }
+                        if (!(players[0].prevRJ_Y == currRJ_Y)) {
+                            players[0].prevRJ_Y = currRJ_Y;
+                        }
 
-                    players[0].moveY(-currLJ_Y);
-                    players[0].moveX(currLJ_X);
+                        players[0].moveY(-currLJ_Y);
+                        players[0].moveX(currLJ_X);
+                    }
                 }
             }
 
