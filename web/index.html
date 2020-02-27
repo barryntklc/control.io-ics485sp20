@@ -36,7 +36,11 @@
              */
             class Player {
                 constructor(color, name, keybinds) {
+                    this.coordsArray = [];
+
                     this.name = name;
+
+                    this.color = color;
 
                     this.prevLJ_X = 0;
                     this.prevLJ_Y = 0;
@@ -135,6 +139,10 @@
                     // }
                 }
 
+                newCoord() {
+                    this.coordsArray.push(new Coordinate(this.player_object.position.x, this.player_object.position.y, this.color));
+                }
+
                 updatePos () {
                     if (this.gamepad == undefined) {
                         if (this.UpPressed) {
@@ -150,6 +158,16 @@
                             this.moveRight();
                         }
                     } else {
+                        if (this.ALocked == false && this.gamepad.buttons[0].pressed) {
+                            // this.APressed = true;
+                            this.newCoord();
+                            this.ALocked = true;
+                        } else if (!this.gamepad.buttons[0].pressed) {
+                            this.ALocked = false;
+                        }
+                        // this.APressed = this.gamepad.buttons[0].pressed;
+                        // this.BPressed = this.gamepad.buttons[1].pressed;
+
                         this.currLJ_X = refineAxisValue(this.gamepad.axes[0]);
                         this.currLJ_Y = refineAxisValue(this.gamepad.axes[1]);
                         if (!(this.prevLJ_X == this.currLJ_X)) {
@@ -211,6 +229,23 @@
                     }
                 }
             };
+
+            class Coordinate {
+                constructor (x, y, color) {
+                    //console.log("x: " + x + ", y: " + y + ", with color: " + color);
+
+                    this.geometry = new THREE.RingGeometry(player_radius, (player_radius + .03), 32);
+                    this.material = new THREE.MeshBasicMaterial({
+                        color: color,
+                        side: THREE.DoubleSide
+                    });
+                    this.coordObject = new THREE.Mesh(this.geometry, this.material);
+                    this.coordObject.position.x = x;
+                    this.coordObject.position.y = y;
+
+                    scene.add(this.coordObject);
+                }
+            }
 
             class Gamepad {
 
